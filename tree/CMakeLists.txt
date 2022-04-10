@@ -4,15 +4,11 @@ project(CNotes)
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(
-        base
-        util
-        tree/include
-
+#        tree
 )
 
-aux_source_directory(tree/src TREE_SRC)
+aux_source_directory(./ TREE_SRC)
 
 add_executable(CNotes
-        main.cpp
         ${TREE_SRC}
-)
+        geometry.h)

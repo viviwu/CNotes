@@ -2,8 +2,8 @@
 // Created by Administrator on 2021/6/8.
 //
 
-#include <multiway_tree.h>
-//#include "../include/multiway_tree.h"
+#include "multiway_tree.h"
+
 
 namespace tree{
     namespace multiway_tree {

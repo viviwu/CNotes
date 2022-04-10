@@ -1,4 +1,8 @@
 //
+// Created by viviwu on 2022/4/11.
+//
+
+//
 // Created by Administrator on 2021/6/8.
 //
 
@@ -6,20 +10,20 @@
 #define CNOTES_GEOMETRY_H
 
 struct XPoint{
-    int x;
-    int y;
+  int x;
+  int y;
 };
 typedef struct XPoint CGPoint;
 
 struct XSize{
-    int width;
-    int height;
+  int width;
+  int height;
 };
 typedef struct XSize CGSize;
 
 struct XRect{
-    XPoint origin;
-    XSize size;
+  XPoint origin;
+  XSize size;
 };
 typedef struct XRect CGRect;
 
