@@ -9,3 +9,5 @@
 .idea
 # CMake build caches
 /cmake-build-debug/
+# macOS disk cache
+.DS_Store
