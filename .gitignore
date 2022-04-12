@@ -11,3 +11,5 @@
 /cmake-build-debug/
 # macOS disk cache
 .DS_Store
+*.txt
+*.out
