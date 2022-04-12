@@ -22,15 +22,17 @@ void pause_thread(int n) {
   std::cout << "pause of " << n << " seconds ended\n";
 }
 
-int std_thread() {
-  std::thread t(hello);
-  std::cout << t.hardware_concurrency() << std::endl;//可以并发执行多少个(不准确)
-  std::cout << "native_handle " << t.native_handle() << std::endl;//可以并发执行多少个(不准确)
-  t.join();
-  std::thread a(hello);
-  a.detach();
-  std::thread threads[5];                         // 默认构造线程
+int std_thread()
+{
+  std::thread thr(hello);
+  std::cout <<"hardware_concurrency: "<< thr.hardware_concurrency() << std::endl;   //可以并发执行多少个(不准确)
+  std::cout << "native_handle: " << thr.native_handle() << std::endl;   //可以并发执行多少个(不准确)
+  thr.join();
+  
+  std::thread thr2(hello);
+  thr2.detach();
 
+  std::thread threads[5];                         // 默认构造线程
   std::cout << "Spawning 5 threads...\n";
   for (int i = 0; i < 5; ++i)
     threads[i] = std::thread(pause_thread, i + 1);   // move-assign threads
@@ -38,4 +40,5 @@ int std_thread() {
   for (auto &thread : threads)
     thread.join();
   std::cout << "All threads joined!\n";
+  return 0;
 }

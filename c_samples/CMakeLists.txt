@@ -11,7 +11,6 @@ add_executable(c_samples main.c
         type_def.h
         var_list_func.c
         func_ptr.c
-        linked_list.c
         ${THREAD_SRC}
         cstr.cpp
         )
