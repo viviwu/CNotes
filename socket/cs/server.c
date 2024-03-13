@@ -49,6 +49,8 @@ int main() {
     }
     printf("Server is listening on port %d...\n", PORT);
 
+    int client_sockets[MAX_CLIENTS] = {0};
+
     while (1) {
         sin_size = sizeof(struct sockaddr_in);
 
@@ -67,6 +69,15 @@ int main() {
             continue;
         }
 
+        // 添加到客户端套接字数组
+        int i;
+        for (i = 0; i < MAX_CLIENTS; i++) {
+            if (client_sockets[i] == 0) {
+                client_sockets[i] = new_fd;
+                break;
+            }
+        }
+
         // 处理消息
         while (1) {
             // 接收消息
@@ -81,8 +92,10 @@ int main() {
 
             // 广播消息给所有客户端
             for (int i = 0; i < MAX_CLIENTS; i++) {
-                if (i != new_fd && send(i, recv_buf, strlen(recv_buf), 0) == -1) {
-                    perror("send");
+                if (client_sockets[i] > 0 && client_sockets[i] != new_fd) {
+                    if (send(client_sockets[i], recv_buf, strlen(recv_buf), 0) == -1) {
+                        perror("send");
+                    }
                 }
             }
 
@@ -92,6 +105,14 @@ int main() {
             }
 
             memset(recv_buf, 0, sizeof(recv_buf));
+        }
+
+        // 从客户端套接字数组中移除
+        for (i = 0; i < MAX_CLIENTS; i++) {
+            if (client_sockets[i] == new_fd) {
+                client_sockets[i] = 0;
+                break;
+            }
         }
 
         // 关闭连接
