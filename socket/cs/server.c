@@ -5,69 +5,102 @@
  * @brief          : None
  ******************************************************************************
  */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <stdio.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <stdlib.h>
 
-#define BUFFER_SIZE 40
+#define PORT 12345
+#define MAX_CLIENTS 10
 
-int main()
-{
-    char buf[BUFFER_SIZE];
-    int server_sockfd, client_sockfd;
-    int sin_size=sizeof(struct sockaddr_in);
-    struct sockaddr_in server_address;
-    struct sockaddr_in client_address;
-    memset(&server_address,0,sizeof(server_address));
-    server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = htons(12000);
-    // 建立服务器端socket
-    if((server_sockfd = socket(AF_INET, SOCK_STREAM, 0))<0)
-    {
-        perror("server_sockfd creation failed");
-        exit(EXIT_FAILURE);
+int main() {
+    int sockfd, new_fd;
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t sin_size;
+    char recv_buf[1024];
+
+    // 创建套接字
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        perror("socket");
+        exit(1);
     }
-    // 设置套接字选项避免地址使用错误
-    int on=1;
-    if((setsockopt(server_sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)))<0)
-    {
-        perror("setsockopt failed");
-        exit(EXIT_FAILURE);
+
+    // 设置服务器地址结构体
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    bzero(&(server_addr.sin_zero), 8);
+
+    // 绑定端口
+    if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
+        perror("bind");
+        exit(1);
     }
-    // 将套接字绑定到服务器的网络地址上
-    if((bind(server_sockfd,(struct sockaddr *)&server_address,sizeof(struct sockaddr)))<0)
-    {
-        perror("server socket bind failed");
-        exit(EXIT_FAILURE);
+
+    // 监听端口
+    if (listen(sockfd, MAX_CLIENTS) == -1) {
+        perror("listen");
+        exit(1);
     }
-    // 建立监听队列
-    listen(server_sockfd,5);
-    // 等待客户端连接请求到达
-    client_sockfd=accept(server_sockfd,(struct sockaddr *)&client_address,(socklen_t*)&sin_size);
-    if(client_sockfd<0)
-    {
-        perror("accept cs socket failed");
-        exit(EXIT_FAILURE);
+    printf("Server is listening on port %d...\n", PORT);
+
+    while (1) {
+        sin_size = sizeof(struct sockaddr_in);
+
+        // 接受客户端连接
+        if ((new_fd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size)) == -1) {
+            perror("accept");
+            continue;
+        }
+        printf("Server: Got connection from %s\n", inet_ntoa(client_addr.sin_addr));
+
+        // 发送欢迎消息
+        char welcome_msg[] = "Welcome to the chat server!\n";
+        if (send(new_fd, welcome_msg, strlen(welcome_msg), 0) == -1) {
+            perror("send");
+            close(new_fd);
+            continue;
+        }
+
+        // 处理消息
+        while (1) {
+            // 接收消息
+            if (recv(new_fd, recv_buf, 1024, 0) == -1) {
+                perror("recv");
+                break;
+            }
+            if (strlen(recv_buf) == 0) {
+                break;
+            }
+            printf("Client %s: %s\n", inet_ntoa(client_addr.sin_addr), recv_buf);
+
+            // 广播消息给所有客户端
+            for (int i = 0; i < MAX_CLIENTS; i++) {
+                if (i != new_fd && send(i, recv_buf, strlen(recv_buf), 0) == -1) {
+                    perror("send");
+                }
+            }
+
+            // 检查是否退出
+            if (strcmp(recv_buf, "exit\n") == 0) {
+                break;
+            }
+
+            memset(recv_buf, 0, sizeof(recv_buf));
+        }
+
+        // 关闭连接
+        printf("Client %s disconnected.\n", inet_ntoa(client_addr.sin_addr));
+        close(new_fd);
     }
-    // 接收客户端数据
-    if(recv(client_sockfd,buf,BUFFER_SIZE,0)<0)
-    {
-        perror("recv cs data failed");
-        exit(EXIT_FAILURE);
-    }
-    printf("receive from cs:%s/n",buf);
-    // 发送数据到客户端
-    if(send(client_sockfd,"I have received your message.\n",BUFFER_SIZE,0)<0)
-    {
-        perror("send failed");
-        exit(EXIT_FAILURE);
-    }
-    close(client_sockfd);
-    close(server_sockfd);
-    exit(EXIT_SUCCESS);
+
+    // 关闭套接字
+    close(sockfd);
+
+    return 0;
 }
