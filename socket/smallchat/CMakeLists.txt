@@ -5,7 +5,11 @@ cmake_minimum_required(VERSION 3.10)
 project(smallchat C)
 
 # Set C standard
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 99)
+#set (CMAKE_C_COMPILER "/usr/local/gcc/bin/gcc")
+#set (CMAKE_CXX_COMPILER "/usr/local/gcc/bin/g++")
+set(CMAKE_C_FLAGS -O2 -Wall -W -std=c99 )
+#add_compile_options(-std=c++11 -Wall -Werror)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -17,7 +21,7 @@ add_library(chatlib
         )
 
 # Include directories for chatlib
-target_include_directories(chatlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(chatlib PUBLIC .)
 
 # Add the smallchat-client executable
 add_executable(smallchat-client
